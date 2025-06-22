@@ -13,6 +13,7 @@ interface SidebarProps {
   selectedTags: string[];
   onTagsChange: (tags: string[]) => void;
   onCloseSidebar: () => void;
+  onSettingsClick: () => void;
 }
 
 export const Sidebar = ({
@@ -23,6 +24,7 @@ export const Sidebar = ({
   selectedTags,
   onTagsChange,
   onCloseSidebar,
+  onSettingsClick,
 }: SidebarProps) => {
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -106,7 +108,12 @@ export const Sidebar = ({
 
       {/* Footer */}
       <div className="p-4 border-t border-white/20">
-        <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="w-full justify-start text-sm"
+          onClick={onSettingsClick}
+        >
           <Settings className="h-4 w-4 mr-2" />
           Settings
         </Button>

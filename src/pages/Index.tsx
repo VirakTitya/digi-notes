@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Search, Plus, Tag, Folder, BookOpen, Settings, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Sidebar } from "@/components/Sidebar";
 import { NotesGrid } from "@/components/NotesGrid";
 import { NoteEditor } from "@/components/NoteEditor";
+import { Settings as SettingsComponent } from "@/components/Settings";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface Note {
@@ -59,6 +59,7 @@ const Index = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
+  const [showSettings, setShowSettings] = useState(false);
 
   const allTags = [...new Set(notes.flatMap(note => note.tags))];
 
@@ -132,6 +133,7 @@ const Index = () => {
           selectedTags={selectedTags}
           onTagsChange={setSelectedTags}
           onCloseSidebar={() => setSidebarOpen(false)}
+          onSettingsClick={() => setShowSettings(true)}
         />
       </div>
 
@@ -215,6 +217,11 @@ const Index = () => {
           </div>
         )}
       </div>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <SettingsComponent onClose={() => setShowSettings(false)} />
+      )}
     </div>
   );
 };
