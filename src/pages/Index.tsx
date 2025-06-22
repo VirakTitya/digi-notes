@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Search, Plus, Tag, Folder, BookOpen, Settings, Menu } from "lucide-react";
+import { Search, Plus, BookOpen, Tag, Folder, Settings, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sidebar } from "@/components/Sidebar";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 import { NotesGrid } from "@/components/NotesGrid";
 import { NoteEditor } from "@/components/NoteEditor";
 import { Settings as SettingsComponent } from "@/components/Settings";
@@ -46,7 +47,7 @@ const Index = () => {
     },
   ]);
 
-  const [folders] = useState<Folder[]>([
+  const [folders, setFolders] = useState<Folder[]>([
     { id: "personal", name: "Personal", color: "bg-green-500" },
     { id: "work", name: "Work", color: "bg-blue-500" },
     { id: "ideas", name: "Ideas", color: "bg-purple-500" },
@@ -107,122 +108,115 @@ const Index = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-green-50 flex">
-      {/* Mobile Menu Button */}
-      {isMobile && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="fixed top-4 left-4 z-50 md:hidden bg-white/80 backdrop-blur-sm"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
-      )}
+  const addFolder = (name: string, color: string) => {
+    const newFolder: Folder = {
+      id: Date.now().toString(),
+      name,
+      color,
+    };
+    setFolders([...folders, newFolder]);
+  };
 
-      {/* Sidebar */}
-      <div className={`${isMobile ? 'fixed inset-y-0 left-0 z-40 transform transition-transform' : 'relative'} ${
-        isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'
-      }`}>
-        <Sidebar
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-blue-50 to-green-50">
+        <AppSidebar
           folders={folders}
           selectedFolder={selectedFolder}
           onFolderSelect={setSelectedFolder}
           allTags={allTags}
           selectedTags={selectedTags}
           onTagsChange={setSelectedTags}
-          onCloseSidebar={() => setSidebarOpen(false)}
           onSettingsClick={() => setShowSettings(true)}
+          onAddFolder={addFolder}
         />
-      </div>
-
-      {/* Mobile Overlay */}
-      {isMobile && sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col md:flex-row min-h-screen">
-        {/* Notes List */}
-        <div className={`${selectedNote && !isMobile ? 'w-1/3' : 'flex-1'} bg-white/60 backdrop-blur-sm border-r border-white/20 flex flex-col ${
-          selectedNote && isMobile ? 'hidden' : ''
-        }`}>
-          {/* Header */}
-          <div className="p-6 border-b border-white/20 bg-white/40">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                <BookOpen className="h-6 w-6 text-emerald-600" />
-                Digital Journal
-              </h1>
-              <Button onClick={createNewNote} size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-                <Plus className="h-4 w-4 mr-1" />
-                New Note
-              </Button>
+        
+        <SidebarInset>
+          <div className="flex flex-col md:flex-row min-h-screen">
+            {/* Header with Sidebar Trigger */}
+            <div className="md:hidden p-4 border-b border-white/20 bg-white/40">
+              <SidebarTrigger />
             </div>
-            
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-              <Input
-                placeholder="Search notes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-white/80 border-white/40 focus:border-emerald-300"
-              />
+
+            {/* Notes List */}
+            <div className={`${selectedNote && !isMobile ? 'w-1/3' : 'flex-1'} bg-white/60 backdrop-blur-sm border-r border-white/20 flex flex-col ${
+              selectedNote && isMobile ? 'hidden' : ''
+            }`}>
+              {/* Header */}
+              <div className="p-6 border-b border-white/20 bg-white/40">
+                <div className="flex items-center justify-between mb-4">
+                  <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    {!isMobile && <SidebarTrigger />}
+                    <BookOpen className="h-6 w-6 text-emerald-600" />
+                    Digital Journal
+                  </h1>
+                  <Button onClick={createNewNote} size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                    <Plus className="h-4 w-4 mr-1" />
+                    New Note
+                  </Button>
+                </div>
+                
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search notes..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-white/80 border-white/40 focus:border-emerald-300"
+                  />
+                </div>
+              </div>
+
+              {/* Notes Grid */}
+              <div className="flex-1 overflow-y-auto">
+                <NotesGrid
+                  notes={filteredNotes}
+                  selectedNote={selectedNote}
+                  onNoteSelect={setSelectedNote}
+                  onNoteDelete={deleteNote}
+                  folders={folders}
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Notes Grid */}
-          <div className="flex-1 overflow-y-auto">
-            <NotesGrid
-              notes={filteredNotes}
-              selectedNote={selectedNote}
-              onNoteSelect={setSelectedNote}
-              onNoteDelete={deleteNote}
-              folders={folders}
-            />
-          </div>
-        </div>
+            {/* Note Editor */}
+            {selectedNote && (
+              <div className={`${isMobile ? 'flex-1' : 'flex-1'} bg-white/40 backdrop-blur-sm`}>
+                <NoteEditor
+                  note={selectedNote}
+                  isEditing={isEditing}
+                  onEdit={setIsEditing}
+                  onSave={updateNote}
+                  onClose={() => {
+                    setSelectedNote(null);
+                    setIsEditing(false);
+                  }}
+                  allTags={allTags}
+                  folders={folders}
+                />
+              </div>
+            )}
 
-        {/* Note Editor */}
-        {selectedNote && (
-          <div className={`${isMobile ? 'flex-1' : 'flex-1'} bg-white/40 backdrop-blur-sm`}>
-            <NoteEditor
-              note={selectedNote}
-              isEditing={isEditing}
-              onEdit={setIsEditing}
-              onSave={updateNote}
-              onClose={() => {
-                setSelectedNote(null);
-                setIsEditing(false);
-              }}
-              allTags={allTags}
-              folders={folders}
-            />
+            {/* Empty State */}
+            {!selectedNote && !isMobile && (
+              <div className="flex-1 bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <div className="text-center text-slate-600">
+                  <BookOpen className="h-16 w-16 mx-auto mb-4 text-slate-400" />
+                  <h3 className="text-xl font-semibold mb-2">No note selected</h3>
+                  <p className="text-slate-500">Choose a note from the sidebar or create a new one</p>
+                </div>
+              </div>
+            )}
           </div>
+        </SidebarInset>
+
+        {/* Settings Modal */}
+        {showSettings && (
+          <SettingsComponent onClose={() => setShowSettings(false)} />
         )}
-
-        {/* Empty State */}
-        {!selectedNote && !isMobile && (
-          <div className="flex-1 bg-white/20 backdrop-blur-sm flex items-center justify-center">
-            <div className="text-center text-slate-600">
-              <BookOpen className="h-16 w-16 mx-auto mb-4 text-slate-400" />
-              <h3 className="text-xl font-semibold mb-2">No note selected</h3>
-              <p className="text-slate-500">Choose a note from the sidebar or create a new one</p>
-            </div>
-          </div>
-        )}
       </div>
-
-      {/* Settings Modal */}
-      {showSettings && (
-        <SettingsComponent onClose={() => setShowSettings(false)} />
-      )}
-    </div>
+    </SidebarProvider>
   );
 };
 
