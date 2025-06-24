@@ -7,6 +7,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { NotesGrid } from "@/components/NotesGrid";
 import { NoteEditor } from "@/components/NoteEditor";
 import { Settings as SettingsComponent } from "@/components/Settings";
+import { AuthScreen } from "@/components/AuthScreen";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface Note {
@@ -26,6 +27,8 @@ export interface Folder {
 }
 
 const Index = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<string>("");
   const [notes, setNotes] = useState<Note[]>([
     {
       id: "1",
@@ -59,7 +62,7 @@ const Index = () => {
   const [selectedFolder, setSelectedFolder] = useState<string>("all");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const isMobile = useIsMobile();
+  const [isMobile = false] = useIsMobile();
   const [showSettings, setShowSettings] = useState(false);
 
   const allTags = [...new Set(notes.flatMap(note => note.tags))];
@@ -73,6 +76,12 @@ const Index = () => {
     
     return matchesSearch && matchesFolder && matchesTags;
   });
+
+  const handleAuthSuccess = (email: string) => {
+    setCurrentUser(email);
+    setIsAuthenticated(true);
+    console.log("User authenticated:", email);
+  };
 
   const createNewNote = () => {
     const newNote: Note = {
@@ -117,6 +126,12 @@ const Index = () => {
     setFolders([...folders, newFolder]);
   };
 
+  // Show authentication screen if not authenticated
+  if (!isAuthenticated) {
+    return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
+  }
+
+  // Show main journal interface after authentication
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-blue-50 to-green-50">
