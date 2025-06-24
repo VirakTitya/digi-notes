@@ -62,7 +62,7 @@ const Index = () => {
   const [selectedFolder, setSelectedFolder] = useState<string>("all");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isMobile = false] = useIsMobile();
+  const isMobile = useIsMobile();
   const [showSettings, setShowSettings] = useState(false);
 
   const allTags = [...new Set(notes.flatMap(note => note.tags))];
