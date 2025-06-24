@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { NotesGrid } from "@/components/NotesGrid";
 import { NoteEditor } from "@/components/NoteEditor";
@@ -118,7 +118,7 @@ const Index = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex w-full">
         <AppSidebar
           folders={folders}
           selectedFolder={selectedFolder}
@@ -133,20 +133,26 @@ const Index = () => {
         <main className="flex-1 p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-8">
-              <div>
-                <h1 className="text-4xl font-bold text-slate-800 dark:text-slate-200 mb-2">
-                  Digital Journal
-                </h1>
-                <p className="text-slate-600 dark:text-slate-400">
-                  Capture your thoughts and organize your ideas
-                </p>
+              <div className="flex items-center gap-4">
+                <SidebarTrigger className="md:hidden" />
+                <div>
+                  <h1 className="text-4xl font-bold text-slate-800 dark:text-slate-200 mb-2">
+                    Digital Journal
+                  </h1>
+                  <p className="text-slate-600 dark:text-slate-400">
+                    Capture your thoughts and organize your ideas
+                  </p>
+                </div>
               </div>
-              <button
-                onClick={handleNewNote}
-                className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-3 rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-              >
-                + New Note
-              </button>
+              <div className="flex items-center gap-4">
+                <SidebarTrigger className="hidden md:block" />
+                <button
+                  onClick={handleNewNote}
+                  className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-3 rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  + New Note
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
