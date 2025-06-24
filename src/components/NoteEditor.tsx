@@ -132,8 +132,8 @@ export const NoteEditor = ({
         {/* Metadata */}
         <div className="flex items-center gap-4 text-sm text-slate-600">
           <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded ${getFolderColor(note.folderId)}`} />
-            <span>{getFolderName(note.folderId)}</span>
+            <div className={`w-3 h-3 rounded ${getFolderColor(note.folder)}`} />
+            <span>{getFolderName(note.folder)}</span>
           </div>
           <span>•</span>
           <span>Updated {note.updatedAt.toLocaleDateString()}</span>
@@ -174,8 +174,8 @@ export const NoteEditor = ({
               </CardHeader>
               <CardContent>
                 <Select
-                  value={editedNote.folderId}
-                  onValueChange={(value) => setEditedNote({ ...editedNote, folderId: value })}
+                  value={editedNote.folder}
+                  onValueChange={(value) => setEditedNote({ ...editedNote, folder: value })}
                 >
                   <SelectTrigger className="bg-white/60">
                     <SelectValue />

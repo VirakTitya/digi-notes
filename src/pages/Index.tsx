@@ -1,19 +1,22 @@
-
-import { useState, useEffect } from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useState } from "react";
+import { Search, Plus, BookOpen, Tag, Folder, Settings, Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { NotesGrid } from "@/components/NotesGrid";
 import { NoteEditor } from "@/components/NoteEditor";
-import { Settings } from "@/components/Settings";
+import { Settings as SettingsComponent } from "@/components/Settings";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface Note {
   id: string;
   title: string;
   content: string;
   tags: string[];
+  folder: string;
   createdAt: Date;
   updatedAt: Date;
-  folderId: string;
 }
 
 export interface Folder {
@@ -23,59 +26,81 @@ export interface Folder {
 }
 
 const Index = () => {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [folders, setFolders] = useState<Folder[]>([]);
+  const [notes, setNotes] = useState<Note[]>([
+    {
+      id: "1",
+      title: "Welcome to Your Digital Journal",
+      content: "Start writing your thoughts, ideas, and memories here. Use tags to organize and find your notes easily.",
+      tags: ["welcome", "getting-started"],
+      folder: "personal",
+      createdAt: new Date("2024-01-15"),
+      updatedAt: new Date("2024-01-15"),
+    },
+    {
+      id: "2",
+      title: "Ideas for the Weekend",
+      content: "- Visit the local farmers market\n- Try that new hiking trail\n- Organize the home office\n- Call mom and dad",
+      tags: ["weekend", "personal", "family"],
+      folder: "personal",
+      createdAt: new Date("2024-01-16"),
+      updatedAt: new Date("2024-01-16"),
+    },
+  ]);
+
+  const [folders, setFolders] = useState<Folder[]>([
+    { id: "personal", name: "Personal", color: "bg-green-500" },
+    { id: "work", name: "Work", color: "bg-blue-500" },
+    { id: "ideas", name: "Ideas", color: "bg-purple-500" },
+  ]);
+
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedFolder, setSelectedFolder] = useState<string>("all");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isMobile = useIsMobile();
   const [showSettings, setShowSettings] = useState(false);
 
-  // Apply theme on mount
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "light";
-    const root = document.documentElement;
-    if (savedTheme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  }, []);
+  const allTags = [...new Set(notes.flatMap(note => note.tags))];
 
-  const handleNoteSelect = (note: Note) => {
-    setSelectedNote(note);
-    setIsEditing(false);
-  };
+  const filteredNotes = notes.filter(note => {
+    const matchesSearch = note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         note.content.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFolder = selectedFolder === "all" || note.folder === selectedFolder;
+    const matchesTags = selectedTags.length === 0 || 
+                       selectedTags.some(tag => note.tags.includes(tag));
+    
+    return matchesSearch && matchesFolder && matchesTags;
+  });
 
-  const handleNewNote = () => {
-    const now = new Date();
+  const createNewNote = () => {
     const newNote: Note = {
       id: Date.now().toString(),
-      title: "New Note",
+      title: "Untitled Note",
       content: "",
       tags: [],
-      createdAt: now,
-      updatedAt: now,
-      folderId: selectedFolder === "all" ? "default" : selectedFolder,
+      folder: selectedFolder === "all" ? "personal" : selectedFolder,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
+    
     setNotes([newNote, ...notes]);
     setSelectedNote(newNote);
     setIsEditing(true);
+    if (isMobile) setSidebarOpen(false);
   };
 
-  const handleSaveNote = (updatedNote: Note) => {
-    const noteWithUpdatedTime = {
-      ...updatedNote,
-      updatedAt: new Date(),
-    };
+  const updateNote = (updatedNote: Note) => {
     setNotes(notes.map(note => 
-      note.id === noteWithUpdatedTime.id ? noteWithUpdatedTime : note
+      note.id === updatedNote.id 
+        ? { ...updatedNote, updatedAt: new Date() }
+        : note
     ));
-    setSelectedNote(noteWithUpdatedTime);
-    setIsEditing(false);
+    setSelectedNote(updatedNote);
   };
 
-  const handleDeleteNote = (noteId: string) => {
+  const deleteNote = (noteId: string) => {
     setNotes(notes.filter(note => note.id !== noteId));
     if (selectedNote?.id === noteId) {
       setSelectedNote(null);
@@ -83,7 +108,7 @@ const Index = () => {
     }
   };
 
-  const handleAddFolder = (name: string, color: string) => {
+  const addFolder = (name: string, color: string) => {
     const newFolder: Folder = {
       id: Date.now().toString(),
       name,
@@ -92,99 +117,103 @@ const Index = () => {
     setFolders([...folders, newFolder]);
   };
 
-  const getAllTags = () => {
-    const tagSet = new Set<string>();
-    notes.forEach(note => {
-      note.tags.forEach(tag => tagSet.add(tag));
-    });
-    return Array.from(tagSet);
-  };
-
-  const getFilteredNotes = () => {
-    let filtered = notes;
-
-    if (selectedFolder !== "all") {
-      filtered = filtered.filter(note => note.folderId === selectedFolder);
-    }
-
-    if (selectedTags.length > 0) {
-      filtered = filtered.filter(note =>
-        selectedTags.every(tag => note.tags.includes(tag))
-      );
-    }
-
-    return filtered;
-  };
-
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex w-full">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-blue-50 to-green-50">
         <AppSidebar
           folders={folders}
           selectedFolder={selectedFolder}
           onFolderSelect={setSelectedFolder}
-          allTags={getAllTags()}
+          allTags={allTags}
           selectedTags={selectedTags}
           onTagsChange={setSelectedTags}
           onSettingsClick={() => setShowSettings(true)}
-          onAddFolder={handleAddFolder}
+          onAddFolder={addFolder}
         />
         
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <SidebarTrigger className="md:hidden" />
-                <div>
-                  <h1 className="text-4xl font-bold text-slate-800 dark:text-slate-200 mb-2">
-                    Digital Journal
-                  </h1>
-                  <p className="text-slate-600 dark:text-slate-400">
-                    Capture your thoughts and organize your ideas
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <SidebarTrigger className="hidden md:block" />
-                <button
-                  onClick={handleNewNote}
-                  className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-3 rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-                >
-                  + New Note
-                </button>
-              </div>
+        <SidebarInset>
+          <div className="flex flex-col md:flex-row min-h-screen">
+            {/* Header with Sidebar Trigger */}
+            <div className="md:hidden p-4 border-b border-white/20 bg-white/40">
+              <SidebarTrigger />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
+            {/* Notes List */}
+            <div className={`${selectedNote && !isMobile ? 'w-1/3' : 'flex-1'} bg-white/60 backdrop-blur-sm border-r border-white/20 flex flex-col ${
+              selectedNote && isMobile ? 'hidden' : ''
+            }`}>
+              {/* Header */}
+              <div className="p-6 border-b border-white/20 bg-white/40">
+                <div className="flex items-center justify-between mb-4">
+                  <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    {!isMobile && <SidebarTrigger />}
+                    <BookOpen className="h-6 w-6 text-emerald-600" />
+                    Digital Journal
+                  </h1>
+                  <Button onClick={createNewNote} size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                    <Plus className="h-4 w-4 mr-1" />
+                    New Note
+                  </Button>
+                </div>
+                
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search notes..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-white/80 border-white/40 focus:border-emerald-300"
+                  />
+                </div>
+              </div>
+
+              {/* Notes Grid */}
+              <div className="flex-1 overflow-y-auto">
                 <NotesGrid
-                  notes={getFilteredNotes()}
-                  onNoteSelect={handleNoteSelect}
-                  onNoteDelete={handleDeleteNote}
+                  notes={filteredNotes}
                   selectedNote={selectedNote}
+                  onNoteSelect={setSelectedNote}
+                  onNoteDelete={deleteNote}
                   folders={folders}
                 />
               </div>
-              
-              <div className="lg:col-span-1">
-                {selectedNote && (
-                  <NoteEditor
-                    note={selectedNote}
-                    isEditing={isEditing}
-                    onEdit={() => setIsEditing(true)}
-                    onSave={handleSaveNote}
-                    onClose={() => setIsEditing(false)}
-                    allTags={getAllTags()}
-                    folders={folders}
-                  />
-                )}
-              </div>
             </div>
-          </div>
-        </main>
 
+            {/* Note Editor */}
+            {selectedNote && (
+              <div className={`${isMobile ? 'flex-1' : 'flex-1'} bg-white/40 backdrop-blur-sm`}>
+                <NoteEditor
+                  note={selectedNote}
+                  isEditing={isEditing}
+                  onEdit={setIsEditing}
+                  onSave={updateNote}
+                  onClose={() => {
+                    setSelectedNote(null);
+                    setIsEditing(false);
+                  }}
+                  allTags={allTags}
+                  folders={folders}
+                />
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!selectedNote && !isMobile && (
+              <div className="flex-1 bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <div className="text-center text-slate-600">
+                  <BookOpen className="h-16 w-16 mx-auto mb-4 text-slate-400" />
+                  <h3 className="text-xl font-semibold mb-2">No note selected</h3>
+                  <p className="text-slate-500">Choose a note from the sidebar or create a new one</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </SidebarInset>
+
+        {/* Settings Modal */}
         {showSettings && (
-          <Settings onClose={() => setShowSettings(false)} />
+          <SettingsComponent onClose={() => setShowSettings(false)} />
         )}
       </div>
     </SidebarProvider>

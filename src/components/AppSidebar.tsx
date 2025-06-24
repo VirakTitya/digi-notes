@@ -73,9 +73,9 @@ export const AppSidebar = ({
   };
 
   return (
-    <Sidebar className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-r border-white/20 dark:border-slate-700/50">
-      <SidebarHeader className="p-4 border-b border-white/20 dark:border-slate-700/50">
-        <h2 className="font-semibold text-slate-800 dark:text-slate-200">Navigation</h2>
+    <Sidebar className="bg-white/80 backdrop-blur-sm border-r border-white/20">
+      <SidebarHeader className="p-4 border-b border-white/20">
+        <h2 className="font-semibold text-slate-800">Navigation</h2>
       </SidebarHeader>
       
       <SidebarContent>
@@ -92,7 +92,7 @@ export const AppSidebar = ({
                   <Plus className="h-3 w-3" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm">
+              <DialogContent className="bg-white/95 backdrop-blur-sm">
                 <DialogHeader>
                   <DialogTitle>Add New Folder</DialogTitle>
                 </DialogHeader>
@@ -114,7 +114,7 @@ export const AppSidebar = ({
                           key={color}
                           onClick={() => setNewFolderColor(color)}
                           className={`w-6 h-6 rounded ${color} ${
-                            newFolderColor === color ? "ring-2 ring-slate-400 dark:ring-slate-300" : ""
+                            newFolderColor === color ? "ring-2 ring-slate-400" : ""
                           }`}
                         />
                       ))}
@@ -172,7 +172,7 @@ export const AppSidebar = ({
                   className={`cursor-pointer text-xs transition-colors ${
                     selectedTags.includes(tag)
                       ? "bg-emerald-600 hover:bg-emerald-700"
-                      : "hover:bg-slate-200 dark:hover:bg-slate-700"
+                      : "hover:bg-slate-200"
                   }`}
                   onClick={() => toggleTag(tag)}
                 >
@@ -180,14 +180,14 @@ export const AppSidebar = ({
                 </Badge>
               ))}
               {allTags.length === 0 && (
-                <p className="text-sm text-slate-500 dark:text-slate-400 p-2">No tags yet</p>
+                <p className="text-sm text-slate-500 p-2">No tags yet</p>
               )}
             </div>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-white/20 dark:border-slate-700/50">
+      <SidebarFooter className="p-4 border-t border-white/20">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={onSettingsClick}>
