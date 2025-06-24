@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -11,6 +12,7 @@ export interface Note {
   content: string;
   tags: string[];
   createdAt: Date;
+  updatedAt: Date;
   folderId: string;
 }
 
@@ -46,12 +48,14 @@ const Index = () => {
   };
 
   const handleNewNote = () => {
+    const now = new Date();
     const newNote: Note = {
       id: Date.now().toString(),
       title: "New Note",
       content: "",
       tags: [],
-      createdAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
       folderId: selectedFolder === "all" ? "default" : selectedFolder,
     };
     setNotes([newNote, ...notes]);
@@ -60,10 +64,14 @@ const Index = () => {
   };
 
   const handleSaveNote = (updatedNote: Note) => {
+    const noteWithUpdatedTime = {
+      ...updatedNote,
+      updatedAt: new Date(),
+    };
     setNotes(notes.map(note => 
-      note.id === updatedNote.id ? updatedNote : note
+      note.id === noteWithUpdatedTime.id ? noteWithUpdatedTime : note
     ));
-    setSelectedNote(updatedNote);
+    setSelectedNote(noteWithUpdatedTime);
     setIsEditing(false);
   };
 
@@ -146,8 +154,9 @@ const Index = () => {
                 <NotesGrid
                   notes={getFilteredNotes()}
                   onNoteSelect={handleNoteSelect}
-                  onDeleteNote={handleDeleteNote}
+                  onNoteDelete={handleDeleteNote}
                   selectedNote={selectedNote}
+                  folders={folders}
                 />
               </div>
               
@@ -158,7 +167,9 @@ const Index = () => {
                     isEditing={isEditing}
                     onEdit={() => setIsEditing(true)}
                     onSave={handleSaveNote}
-                    onCancel={() => setIsEditing(false)}
+                    onClose={() => setIsEditing(false)}
+                    allTags={getAllTags()}
+                    folders={folders}
                   />
                 )}
               </div>

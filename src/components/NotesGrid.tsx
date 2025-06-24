@@ -102,8 +102,8 @@ export const NotesGrid = ({
             <CardFooter className="pt-2 pb-3">
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded ${getFolderColor(note.folder)}`} />
-                  <span className="text-xs text-slate-500">{getFolderName(note.folder)}</span>
+                  <div className={`w-2 h-2 rounded ${getFolderColor(note.folderId)}`} />
+                  <span className="text-xs text-slate-500">{getFolderName(note.folderId)}</span>
                 </div>
                 <span className="text-xs text-slate-400">
                   {formatDistanceToNow(note.updatedAt, { addSuffix: true })}
