@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Search, Plus, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -130,16 +129,16 @@ const Index = () => {
         />
         
         <SidebarInset className="flex-1">
-          <div className="flex flex-col md:flex-row min-h-screen">
-            {/* Header with Sidebar Trigger */}
-            <div className="p-4 border-b border-white/20 bg-white/40 flex items-center gap-4">
-              <SidebarTrigger />
-              <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-emerald-600" />
-                Digital Journal
-              </h1>
-            </div>
+          {/* Header with Sidebar Trigger */}
+          <div className="p-4 border-b border-white/20 bg-white/40 flex items-center gap-4">
+            <SidebarTrigger />
+            <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-emerald-600" />
+              Digital Journal
+            </h1>
+          </div>
 
+          <div className="flex flex-col md:flex-row min-h-screen">
             {/* Notes List */}
             <div className={`${selectedNote && !isMobile ? 'w-1/3' : 'flex-1'} bg-white/60 backdrop-blur-sm border-r border-white/20 flex flex-col ${
               selectedNote && isMobile ? 'hidden' : ''
