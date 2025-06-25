@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Folder, Tag, Settings, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Folder, Tag, Settings, X, Plus } from "lucide-react";
 
 export const Sidebar = ({
   folders,
@@ -13,12 +14,37 @@ export const Sidebar = ({
   onTagsChange,
   onCloseSidebar,
   onSettingsClick,
+  onAddFolder,
 }) => {
+  const [showAddFolder, setShowAddFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [selectedColor, setSelectedColor] = useState("bg-blue-500");
+
+  const colors = [
+    "bg-blue-500",
+    "bg-green-500", 
+    "bg-purple-500",
+    "bg-red-500",
+    "bg-yellow-500",
+    "bg-pink-500",
+    "bg-indigo-500",
+    "bg-orange-500"
+  ];
+
   const toggleTag = (tag) => {
     if (selectedTags.includes(tag)) {
       onTagsChange(selectedTags.filter(t => t !== tag));
     } else {
       onTagsChange([...selectedTags, tag]);
+    }
+  };
+
+  const handleAddFolder = () => {
+    if (newFolderName.trim()) {
+      onAddFolder(newFolderName.trim(), selectedColor);
+      setNewFolderName("");
+      setSelectedColor("bg-blue-500");
+      setShowAddFolder(false);
     }
   };
 
@@ -39,10 +65,58 @@ export const Sidebar = ({
 
       {/* Folders */}
       <div className="p-4 border-b border-white/20">
-        <h3 className="text-sm font-medium text-slate-600 mb-3 flex items-center gap-2">
-          <Folder className="h-4 w-4" />
-          Folders
-        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-medium text-slate-600 flex items-center gap-2">
+            <Folder className="h-4 w-4" />
+            Folders
+          </h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAddFolder(!showAddFolder)}
+            className="h-6 w-6 p-0"
+          >
+            <Plus className="h-3 w-3" />
+          </Button>
+        </div>
+
+        {/* Add Folder Form */}
+        {showAddFolder && (
+          <div className="mb-3 p-3 bg-white/50 rounded-md border">
+            <Input
+              placeholder="Folder name"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              className="mb-2 h-8 text-sm"
+              onKeyPress={(e) => e.key === 'Enter' && handleAddFolder()}
+            />
+            <div className="flex gap-1 mb-2">
+              {colors.map((color) => (
+                <button
+                  key={color}
+                  onClick={() => setSelectedColor(color)}
+                  className={`w-4 h-4 rounded ${color} border-2 ${
+                    selectedColor === color ? 'border-slate-800' : 'border-transparent'
+                  }`}
+                />
+              ))}
+            </div>
+            <div className="flex gap-1">
+              <Button size="sm" onClick={handleAddFolder} className="h-6 text-xs">
+                Add
+              </Button>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={() => setShowAddFolder(false)}
+                className="h-6 text-xs"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-1">
           <Button
             variant={selectedFolder === "all" ? "secondary" : "ghost"}

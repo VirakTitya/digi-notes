@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Search, Plus, BookOpen, Tag, Folder, Settings, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
