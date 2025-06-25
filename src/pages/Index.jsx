@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Search, Plus, BookOpen, Tag, Folder, Settings, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,26 +11,10 @@ import { Settings as SettingsComponent } from "@/components/Settings";
 import { AuthScreen } from "@/components/AuthScreen";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-export interface Note {
-  id: string;
-  title: string;
-  content: string;
-  tags: string[];
-  folder: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface Folder {
-  id: string;
-  name: string;
-  color: string;
-}
-
 const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState<string>("");
-  const [notes, setNotes] = useState<Note[]>([
+  const [currentUser, setCurrentUser] = useState("");
+  const [notes, setNotes] = useState([
     {
       id: "1",
       title: "Welcome to Your Digital Journal",
@@ -50,17 +35,17 @@ const Index = () => {
     },
   ]);
 
-  const [folders, setFolders] = useState<Folder[]>([
+  const [folders, setFolders] = useState([
     { id: "personal", name: "Personal", color: "bg-green-500" },
     { id: "work", name: "Work", color: "bg-blue-500" },
     { id: "ideas", name: "Ideas", color: "bg-purple-500" },
   ]);
 
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [selectedNote, setSelectedNote] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFolder, setSelectedFolder] = useState<string>("all");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState("all");
+  const [selectedTags, setSelectedTags] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const [showSettings, setShowSettings] = useState(false);
@@ -77,14 +62,14 @@ const Index = () => {
     return matchesSearch && matchesFolder && matchesTags;
   });
 
-  const handleAuthSuccess = (email: string) => {
+  const handleAuthSuccess = (email) => {
     setCurrentUser(email);
     setIsAuthenticated(true);
     console.log("User authenticated:", email);
   };
 
   const createNewNote = () => {
-    const newNote: Note = {
+    const newNote = {
       id: Date.now().toString(),
       title: "Untitled Note",
       content: "",
@@ -100,7 +85,7 @@ const Index = () => {
     if (isMobile) setSidebarOpen(false);
   };
 
-  const updateNote = (updatedNote: Note) => {
+  const updateNote = (updatedNote) => {
     setNotes(notes.map(note => 
       note.id === updatedNote.id 
         ? { ...updatedNote, updatedAt: new Date() }
@@ -109,7 +94,7 @@ const Index = () => {
     setSelectedNote(updatedNote);
   };
 
-  const deleteNote = (noteId: string) => {
+  const deleteNote = (noteId) => {
     setNotes(notes.filter(note => note.id !== noteId));
     if (selectedNote?.id === noteId) {
       setSelectedNote(null);
@@ -117,8 +102,8 @@ const Index = () => {
     }
   };
 
-  const addFolder = (name: string, color: string) => {
-    const newFolder: Folder = {
+  const addFolder = (name, color) => {
+    const newFolder = {
       id: Date.now().toString(),
       name,
       color,

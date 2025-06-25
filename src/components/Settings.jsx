@@ -7,11 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Palette, LogOut } from "lucide-react";
 
-interface SettingsProps {
-  onClose: () => void;
-}
-
-export const Settings = ({ onClose }: SettingsProps) => {
+export const Settings = ({ onClose }) => {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [currentTheme, setCurrentTheme] = useState("light");
 
@@ -20,9 +16,8 @@ export const Settings = ({ onClose }: SettingsProps) => {
     console.log("Logged out");
   };
 
-  const handleThemeChange = (theme: string) => {
+  const handleThemeChange = (theme) => {
     setCurrentTheme(theme);
-    // In a real app, this would apply the theme
     console.log("Theme changed to:", theme);
   };
 
@@ -42,35 +37,10 @@ export const Settings = ({ onClose }: SettingsProps) => {
         </CardHeader>
         
         <CardContent>
-          <Tabs defaultValue="account" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="account">Account</TabsTrigger>
+          <Tabs defaultValue="theme" className="w-full">
+            <TabsList className="grid w-full grid-cols-1">
               <TabsTrigger value="theme">Theme</TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="account" className="space-y-4">
-              {isSignedIn ? (
-                <div className="space-y-4">
-                  <div className="p-4 bg-slate-50 rounded-lg">
-                    <h3 className="font-medium text-slate-800">Account Information</h3>
-                    <p className="text-sm text-slate-600">user@example.com</p>
-                  </div>
-                  
-                  <Button 
-                    onClick={handleLogout}
-                    variant="destructive"
-                    className="w-full"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Log Out
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-slate-500">Please sign in to view account settings</p>
-                </div>
-              )}
-            </TabsContent>
             
             <TabsContent value="theme" className="space-y-4">
               <div className="space-y-4">

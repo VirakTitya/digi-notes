@@ -3,18 +3,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Folder, Tag, Settings, X } from "lucide-react";
-import { Folder as FolderType } from "@/pages/Index";
-
-interface SidebarProps {
-  folders: FolderType[];
-  selectedFolder: string;
-  onFolderSelect: (folderId: string) => void;
-  allTags: string[];
-  selectedTags: string[];
-  onTagsChange: (tags: string[]) => void;
-  onCloseSidebar: () => void;
-  onSettingsClick: () => void;
-}
 
 export const Sidebar = ({
   folders,
@@ -25,8 +13,8 @@ export const Sidebar = ({
   onTagsChange,
   onCloseSidebar,
   onSettingsClick,
-}: SidebarProps) => {
-  const toggleTag = (tag: string) => {
+}) => {
+  const toggleTag = (tag) => {
     if (selectedTags.includes(tag)) {
       onTagsChange(selectedTags.filter(t => t !== tag));
     } else {
