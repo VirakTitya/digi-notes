@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { Search, Plus, BookOpen, Tag, Folder, Settings, Menu } from "lucide-react";
+import { Search, Plus, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -45,7 +46,6 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFolder, setSelectedFolder] = useState("all");
   const [selectedTags, setSelectedTags] = useState([]);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const [showSettings, setShowSettings] = useState(false);
 
@@ -81,7 +81,6 @@ const Index = () => {
     setNotes([newNote, ...notes]);
     setSelectedNote(newNote);
     setIsEditing(true);
-    if (isMobile) setSidebarOpen(false);
   };
 
   const updateNote = (updatedNote) => {
@@ -130,11 +129,15 @@ const Index = () => {
           onAddFolder={addFolder}
         />
         
-        <SidebarInset>
+        <SidebarInset className="flex-1">
           <div className="flex flex-col md:flex-row min-h-screen">
             {/* Header with Sidebar Trigger */}
-            <div className="md:hidden p-4 border-b border-white/20 bg-white/40">
+            <div className="p-4 border-b border-white/20 bg-white/40 flex items-center gap-4">
               <SidebarTrigger />
+              <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-emerald-600" />
+                Digital Journal
+              </h1>
             </div>
 
             {/* Notes List */}
@@ -144,11 +147,6 @@ const Index = () => {
               {/* Header */}
               <div className="p-6 border-b border-white/20 bg-white/40">
                 <div className="flex items-center justify-between mb-4">
-                  <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    {!isMobile && <SidebarTrigger />}
-                    <BookOpen className="h-6 w-6 text-emerald-600" />
-                    Digital Journal
-                  </h1>
                   <Button onClick={createNewNote} size="sm" className="bg-emerald-600 hover:bg-emerald-700">
                     <Plus className="h-4 w-4 mr-1" />
                     New Note
