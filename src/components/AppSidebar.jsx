@@ -137,23 +137,23 @@ export const AppSidebar = ({
                 </SidebarMenuButton>
               </SidebarMenuItem>
               {folders.map((folder) => (
-                <SidebarMenuItem key={folder.id} className="group relative">
+                <SidebarMenuItem key={folder.id}>
                   <SidebarMenuButton
                     isActive={selectedFolder === folder.id}
                     onClick={() => onFolderSelect(folder.id)}
-                    className="w-full pr-8"
+                    className="group"
                   >
                     <div className={`w-3 h-3 rounded ${folder.color} mr-2`} />
                     <span className="flex-1">{folder.name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleDeleteFolder(folder.id, e)}
+                      className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3 text-red-500" />
+                    </Button>
                   </SidebarMenuButton>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => handleDeleteFolder(folder.id, e)}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X className="h-3 w-3 text-red-500" />
-                  </Button>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
