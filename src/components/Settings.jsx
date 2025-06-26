@@ -3,22 +3,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Palette, LogOut } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 
-export const Settings = ({ onClose }) => {
-  const [isSignedIn, setIsSignedIn] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState("light");
-
+export const Settings = ({ onClose, currentUser, onLogout }) => {
   const handleLogout = () => {
-    setIsSignedIn(false);
-    console.log("Logged out");
-  };
-
-  const handleThemeChange = (theme) => {
-    setCurrentTheme(theme);
-    console.log("Theme changed to:", theme);
+    onLogout();
+    onClose();
   };
 
   return (
@@ -28,7 +18,7 @@ export const Settings = ({ onClose }) => {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Settings
+              Account Settings
             </CardTitle>
             <Button variant="ghost" size="icon" onClick={onClose}>
               ×
@@ -37,32 +27,32 @@ export const Settings = ({ onClose }) => {
         </CardHeader>
         
         <CardContent>
-          <Tabs defaultValue="theme" className="w-full">
-            <TabsList className="grid w-full grid-cols-1">
-              <TabsTrigger value="theme">Theme</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="theme" className="space-y-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Palette className="h-4 w-4" />
-                    Choose Theme
-                  </Label>
-                  <Select value={currentTheme} onValueChange={handleThemeChange}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white/95 backdrop-blur-sm">
-                      <SelectItem value="light">Light</SelectItem>
-                      <SelectItem value="dark">Dark</SelectItem>
-                      <SelectItem value="system">System</SelectItem>
-                    </SelectContent>
-                  </Select>
+          <div className="space-y-6">
+            {/* Account Information */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Logged in as
+                </Label>
+                <div className="p-3 bg-slate-100 rounded-md">
+                  <p className="text-sm font-medium text-slate-700">
+                    {currentUser || 'Not logged in'}
+                  </p>
                 </div>
               </div>
-            </TabsContent>
-          </Tabs>
+              
+              {/* Logout Button */}
+              <Button 
+                onClick={handleLogout}
+                variant="destructive"
+                className="w-full flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Log Out
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

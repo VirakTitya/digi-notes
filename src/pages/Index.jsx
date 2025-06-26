@@ -66,6 +66,14 @@ const Index = () => {
     console.log("User authenticated:", email);
   };
 
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setCurrentUser("");
+    setSelectedNote(null);
+    setIsEditing(false);
+    console.log("User logged out");
+  };
+
   const createNewNote = () => {
     const newNote = {
       id: Date.now().toString(),
@@ -209,7 +217,11 @@ const Index = () => {
 
         {/* Settings Modal */}
         {showSettings && (
-          <SettingsComponent onClose={() => setShowSettings(false)} />
+          <SettingsComponent 
+            onClose={() => setShowSettings(false)}
+            currentUser={currentUser}
+            onLogout={handleLogout}
+          />
         )}
       </div>
     </SidebarProvider>
