@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Plus, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,36 +9,13 @@ import { NoteEditor } from "@/components/NoteEditor";
 import { Settings as SettingsComponent } from "@/components/Settings";
 import { AuthScreen } from "@/components/AuthScreen";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { saveUserData, loadUserData, getDefaultData } from "@/utils/localStorage";
 
 const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState("");
-  const [notes, setNotes] = useState([
-    {
-      id: "1",
-      title: "Welcome to Your Digital Journal",
-      content: "Start writing your thoughts, ideas, and memories here. Use tags to organize and find your notes easily.",
-      tags: ["welcome", "getting-started"],
-      folder: "personal",
-      createdAt: new Date("2024-01-15"),
-      updatedAt: new Date("2024-01-15"),
-    },
-    {
-      id: "2",
-      title: "Ideas for the Weekend",
-      content: "- Visit the local farmers market\n- Try that new hiking trail\n- Organize the home office\n- Call mom and dad",
-      tags: ["weekend", "personal", "family"],
-      folder: "personal",
-      createdAt: new Date("2024-01-16"),
-      updatedAt: new Date("2024-01-16"),
-    },
-  ]);
-
-  const [folders, setFolders] = useState([
-    { id: "personal", name: "Personal", color: "bg-green-500" },
-    { id: "work", name: "Work", color: "bg-blue-500" },
-    { id: "ideas", name: "Ideas", color: "bg-purple-500" },
-  ]);
+  const [notes, setNotes] = useState([]);
+  const [folders, setFolders] = useState([]);
 
   const [selectedNote, setSelectedNote] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -47,6 +24,13 @@ const Index = () => {
   const [selectedTags, setSelectedTags] = useState([]);
   const isMobile = useIsMobile();
   const [showSettings, setShowSettings] = useState(false);
+
+  // Save user data whenever notes or folders change
+  useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      saveUserData(currentUser, { notes, folders });
+    }
+  }, [notes, folders, isAuthenticated, currentUser]);
 
   const allTags = [...new Set(notes.flatMap(note => note.tags))];
 
@@ -60,9 +44,23 @@ const Index = () => {
     return matchesSearch && matchesFolder && matchesTags;
   });
 
+  const loadUserSpecificData = (email) => {
+    const userData = loadUserData(email);
+    if (userData) {
+      setNotes(userData.notes || []);
+      setFolders(userData.folders || []);
+    } else {
+      // Load default data for new users
+      const defaultData = getDefaultData();
+      setNotes(defaultData.notes);
+      setFolders(defaultData.folders);
+    }
+  };
+
   const handleAuthSuccess = (email) => {
     setCurrentUser(email);
     setIsAuthenticated(true);
+    loadUserSpecificData(email);
     console.log("User authenticated:", email);
   };
 
@@ -71,6 +69,8 @@ const Index = () => {
     setCurrentUser("");
     setSelectedNote(null);
     setIsEditing(false);
+    setNotes([]);
+    setFolders([]);
     console.log("User logged out");
   };
 
