@@ -1,21 +1,33 @@
 
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Folder, Tag, Settings, Plus, X } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
+  SidebarFooter,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarHeader,
-  SidebarFooter,
 } from "@/components/ui/sidebar";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Folder, Tag, Settings, Plus, X } from "lucide-react";
+
+const folderColors = [
+  "bg-red-500",
+  "bg-blue-500",
+  "bg-green-500",
+  "bg-yellow-500",
+  "bg-purple-500",
+  "bg-pink-500",
+  "bg-indigo-500",
+  "bg-orange-500",
+];
 
 export const AppSidebar = ({
   folders,
@@ -30,18 +42,7 @@ export const AppSidebar = ({
 }) => {
   const [showAddFolder, setShowAddFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  const [selectedColor, setSelectedColor] = useState("bg-blue-500");
-
-  const colors = [
-    "bg-blue-500",
-    "bg-green-500", 
-    "bg-purple-500",
-    "bg-red-500",
-    "bg-yellow-500",
-    "bg-pink-500",
-    "bg-indigo-500",
-    "bg-orange-500"
-  ];
+  const [newFolderColor, setNewFolderColor] = useState("bg-blue-500");
 
   const toggleTag = (tag) => {
     if (selectedTags.includes(tag)) {
@@ -53,9 +54,9 @@ export const AppSidebar = ({
 
   const handleAddFolder = () => {
     if (newFolderName.trim()) {
-      onAddFolder(newFolderName.trim(), selectedColor);
+      onAddFolder(newFolderName.trim(), newFolderColor);
       setNewFolderName("");
-      setSelectedColor("bg-blue-500");
+      setNewFolderColor("bg-blue-500");
       setShowAddFolder(false);
     }
   };
@@ -66,66 +67,65 @@ export const AppSidebar = ({
   };
 
   return (
-    <Sidebar>
-      <SidebarHeader>
-        <h2 className="font-semibold text-slate-800 p-4">Navigation</h2>
+    <Sidebar className="bg-white/80 backdrop-blur-sm border-r border-white/20">
+      <SidebarHeader className="p-4 border-b border-white/20">
+        <h2 className="font-semibold text-slate-800">Navigation</h2>
       </SidebarHeader>
       
       <SidebarContent>
-        {/* Folders */}
+        {/* Folders Section */}
         <SidebarGroup>
-          <div className="flex items-center justify-between">
-            <SidebarGroupLabel className="flex items-center gap-2">
+          <SidebarGroupLabel className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <Folder className="h-4 w-4" />
               Folders
-            </SidebarGroupLabel>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAddFolder(!showAddFolder)}
-              className="h-6 w-6 p-0"
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
-          </div>
-
-          {/* Add Folder Form */}
-          {showAddFolder && (
-            <div className="mb-3 p-3 bg-white/50 rounded-md border">
-              <Input
-                placeholder="Folder name"
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                className="mb-2 h-8 text-sm"
-                onKeyPress={(e) => e.key === 'Enter' && handleAddFolder()}
-              />
-              <div className="flex gap-1 mb-2">
-                {colors.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
-                    className={`w-4 h-4 rounded ${color} border-2 ${
-                      selectedColor === color ? 'border-slate-800' : 'border-transparent'
-                    }`}
-                  />
-                ))}
-              </div>
-              <div className="flex gap-1">
-                <Button size="sm" onClick={handleAddFolder} className="h-6 text-xs">
-                  Add
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={() => setShowAddFolder(false)}
-                  className="h-6 text-xs"
-                >
-                  Cancel
-                </Button>
-              </div>
             </div>
-          )}
-
+            <Dialog open={showAddFolder} onOpenChange={setShowAddFolder}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6">
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-white/95 backdrop-blur-sm">
+                <DialogHeader>
+                  <DialogTitle>Add New Folder</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium">Folder Name</label>
+                    <Input
+                      value={newFolderName}
+                      onChange={(e) => setNewFolderName(e.target.value)}
+                      placeholder="Enter folder name"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Color</label>
+                    <div className="flex gap-2 mt-2">
+                      {folderColors.map((color) => (
+                        <button
+                          key={color}
+                          onClick={() => setNewFolderColor(color)}
+                          className={`w-6 h-6 rounded ${color} ${
+                            newFolderColor === color ? "ring-2 ring-slate-400" : ""
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" onClick={() => setShowAddFolder(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAddFolder}>
+                      Add Folder
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -141,10 +141,12 @@ export const AppSidebar = ({
                   <SidebarMenuButton
                     isActive={selectedFolder === folder.id}
                     onClick={() => onFolderSelect(folder.id)}
-                    className="group"
+                    className="group justify-between"
                   >
-                    <div className={`w-3 h-3 rounded ${folder.color} mr-2`} />
-                    <span className="flex-1">{folder.name}</span>
+                    <div className="flex items-center">
+                      <div className={`w-3 h-3 rounded ${folder.color} mr-2`} />
+                      {folder.name}
+                    </div>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -160,7 +162,7 @@ export const AppSidebar = ({
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Tags */}
+        {/* Tags Section */}
         <SidebarGroup>
           <SidebarGroupLabel className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
@@ -190,7 +192,7 @@ export const AppSidebar = ({
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="p-4 border-t border-white/20">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={onSettingsClick}>
