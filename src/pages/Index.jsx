@@ -90,13 +90,25 @@ const Index = () => {
     setIsEditing(true);
   };
 
-  const updateNote = (updatedNote) => {
+  const handleSaveNote = (updatedNote) => {
+    console.log("Handling save note:", updatedNote);
     setNotes(notes.map(note => 
       note.id === updatedNote.id 
         ? { ...updatedNote, updatedAt: new Date() }
         : note
     ));
-    setSelectedNote(updatedNote);
+    setSelectedNote({ ...updatedNote, updatedAt: new Date() });
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    console.log("Handling cancel edit");
+    setIsEditing(false);
+    // If it's a new note that was never saved (no content and default title), remove it
+    if (selectedNote && selectedNote.title === "Untitled Note" && !selectedNote.content) {
+      setNotes(notes.filter(note => note.id !== selectedNote.id));
+      setSelectedNote(null);
+    }
   };
 
   const deleteNote = (noteId) => {
@@ -208,8 +220,9 @@ const Index = () => {
                 <NoteEditor
                   note={selectedNote}
                   isEditing={isEditing}
-                  onEdit={setIsEditing}
-                  onSave={updateNote}
+                  onEdit={() => setIsEditing(true)}
+                  onSave={handleSaveNote}
+                  onCancel={handleCancelEdit}
                   onClose={() => {
                     setSelectedNote(null);
                     setIsEditing(false);

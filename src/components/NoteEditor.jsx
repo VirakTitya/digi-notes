@@ -14,6 +14,7 @@ export const NoteEditor = ({
   onSave,
   onCancel,
   onEdit,
+  onClose,
   folders,
 }) => {
   const [title, setTitle] = useState("");
@@ -37,12 +38,25 @@ export const NoteEditor = ({
   }, [note, folders]);
 
   const handleSave = () => {
-    onSave({
+    const updatedNote = {
+      ...note,
       title: title.trim() || "Untitled",
       content,
       folder: selectedFolder,
       tags,
-    });
+    };
+    
+    console.log("Saving note:", updatedNote);
+    onSave(updatedNote);
+  };
+
+  const handleCancel = () => {
+    console.log("Canceling note edit");
+    if (onCancel) {
+      onCancel();
+    } else if (onClose) {
+      onClose();
+    }
   };
 
   const addTag = () => {
@@ -93,7 +107,7 @@ export const NoteEditor = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {note && !isEditing && (
-                <Button variant="ghost" size="icon" onClick={onCancel}>
+                <Button variant="ghost" size="icon" onClick={handleCancel}>
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               )}
@@ -110,7 +124,7 @@ export const NoteEditor = ({
               </Button>
             ) : (
               <div className="flex gap-2">
-                <Button variant="outline" onClick={onCancel}>
+                <Button variant="outline" onClick={handleCancel}>
                   <X className="h-4 w-4 mr-2" />
                   Cancel
                 </Button>
