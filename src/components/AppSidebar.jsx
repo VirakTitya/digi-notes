@@ -15,7 +15,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Folder, Tag, Settings, Plus } from "lucide-react";
+import { Folder, Tag, Settings, Plus, X } from "lucide-react";
 
 export const AppSidebar = ({
   folders,
@@ -26,6 +26,7 @@ export const AppSidebar = ({
   onTagsChange,
   onSettingsClick,
   onAddFolder,
+  onDeleteFolder,
 }) => {
   const [showAddFolder, setShowAddFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
@@ -57,6 +58,11 @@ export const AppSidebar = ({
       setSelectedColor("bg-blue-500");
       setShowAddFolder(false);
     }
+  };
+
+  const handleDeleteFolder = (folderId, e) => {
+    e.stopPropagation();
+    onDeleteFolder(folderId);
   };
 
   return (
@@ -135,9 +141,18 @@ export const AppSidebar = ({
                   <SidebarMenuButton
                     isActive={selectedFolder === folder.id}
                     onClick={() => onFolderSelect(folder.id)}
+                    className="group"
                   >
                     <div className={`w-3 h-3 rounded ${folder.color} mr-2`} />
-                    {folder.name}
+                    <span className="flex-1">{folder.name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleDeleteFolder(folder.id, e)}
+                      className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3 text-red-500" />
+                    </Button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

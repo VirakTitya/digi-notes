@@ -116,6 +116,23 @@ const Index = () => {
     setFolders([...folders, newFolder]);
   };
 
+  const deleteFolder = (folderId) => {
+    // Move notes from deleted folder to "personal" folder
+    setNotes(notes.map(note => 
+      note.folder === folderId 
+        ? { ...note, folder: "personal" }
+        : note
+    ));
+    
+    // Remove the folder
+    setFolders(folders.filter(folder => folder.id !== folderId));
+    
+    // Reset selected folder if it's the one being deleted
+    if (selectedFolder === folderId) {
+      setSelectedFolder("all");
+    }
+  };
+
   // Show authentication screen if not authenticated
   if (!isAuthenticated) {
     return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
@@ -134,6 +151,7 @@ const Index = () => {
           onTagsChange={setSelectedTags}
           onSettingsClick={() => setShowSettings(true)}
           onAddFolder={addFolder}
+          onDeleteFolder={deleteFolder}
         />
         
         <SidebarInset className="flex-1">
