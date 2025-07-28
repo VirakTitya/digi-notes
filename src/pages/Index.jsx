@@ -9,13 +9,26 @@ import { NoteEditor } from "@/components/NoteEditor";
 import { Settings as SettingsComponent } from "@/components/Settings";
 import { AuthScreen } from "@/components/AuthScreen";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { saveUserData, loadUserData, getDefaultData } from "@/utils/localStorage";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  fetchNotes,
+  fetchFolders,
+  createNote,
+  updateNote,
+  deleteNote as deleteNoteService,
+  createFolder as createFolderService,
+  deleteFolder as deleteFolderService,
+  initializeDefaultFolders,
+  initializeDefaultNotes
+} from "@/services/notesService";
 
 const Index = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState("");
+  const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
   const [notes, setNotes] = useState([]);
   const [folders, setFolders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [selectedNote, setSelectedNote] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -24,13 +37,82 @@ const Index = () => {
   const [selectedTags, setSelectedTags] = useState([]);
   const isMobile = useIsMobile();
   const [showSettings, setShowSettings] = useState(false);
+  const { toast } = useToast();
 
-  // Save user data whenever notes or folders change
+  // Set up auth state listener and check for existing session
   useEffect(() => {
-    if (isAuthenticated && currentUser) {
-      saveUserData(currentUser, { notes, folders });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          setTimeout(() => {
+            loadUserData();
+          }, 0);
+        } else {
+          setNotes([]);
+          setFolders([]);
+          setSelectedNote(null);
+          setIsEditing(false);
+        }
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      setLoading(true);
+      
+      // Initialize default folders for new users first
+      await initializeDefaultFolders();
+      
+      // Load folders and notes
+      const [foldersData, notesData] = await Promise.all([
+        fetchFolders(),
+        fetchNotes()
+      ]);
+      
+      setFolders(foldersData);
+      setNotes(notesData.map(note => ({
+        ...note,
+        folder: note.folder_id, // Map folder_id to folder for compatibility
+        createdAt: new Date(note.created_at),
+        updatedAt: new Date(note.updated_at)
+      })));
+
+      // Initialize default notes if this is a new user
+      if (notesData.length === 0 && foldersData.length > 0) {
+        await initializeDefaultNotes(foldersData);
+        // Reload notes after creating defaults
+        const newNotesData = await fetchNotes();
+        setNotes(newNotesData.map(note => ({
+          ...note,
+          folder: note.folder_id,
+          createdAt: new Date(note.created_at),
+          updatedAt: new Date(note.updated_at)
+        })));
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load your data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  }, [notes, folders, isAuthenticated, currentUser]);
+  };
 
   const allTags = [...new Set(notes.flatMap(note => note.tags))];
 
@@ -44,61 +126,85 @@ const Index = () => {
     return matchesSearch && matchesFolder && matchesTags;
   });
 
-  const loadUserSpecificData = (email) => {
-    const userData = loadUserData(email);
-    if (userData) {
-      setNotes(userData.notes || []);
-      setFolders(userData.folders || []);
-    } else {
-      // Load default data for new users
-      const defaultData = getDefaultData();
-      setNotes(defaultData.notes);
-      setFolders(defaultData.folders);
+  const handleAuthSuccess = (email) => {
+    console.log("User authenticated:", email);
+    // Auth state will be handled by the listener
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setSelectedNote(null);
+      setIsEditing(false);
+      setNotes([]);
+      setFolders([]);
+      console.log("User logged out");
+    } catch (error) {
+      console.error('Error logging out:', error);
     }
   };
 
-  const handleAuthSuccess = (email) => {
-    setCurrentUser(email);
-    setIsAuthenticated(true);
-    loadUserSpecificData(email);
-    console.log("User authenticated:", email);
+  const createNewNote = async () => {
+    try {
+      const newNote = await createNote({
+        title: "Untitled Note",
+        content: "",
+        tags: [],
+        folder: selectedFolder === "all" ? folders.find(f => f.name === "Personal")?.id || folders[0]?.id : selectedFolder,
+      });
+      
+      const mappedNote = {
+        ...newNote,
+        folder: newNote.folder_id,
+        createdAt: new Date(newNote.created_at),
+        updatedAt: new Date(newNote.updated_at)
+      };
+      
+      setNotes([mappedNote, ...notes]);
+      setSelectedNote(mappedNote);
+      setIsEditing(true);
+    } catch (error) {
+      console.error('Error creating note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create note. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setCurrentUser("");
-    setSelectedNote(null);
-    setIsEditing(false);
-    setNotes([]);
-    setFolders([]);
-    console.log("User logged out");
-  };
-
-  const createNewNote = () => {
-    const newNote = {
-      id: Date.now().toString(),
-      title: "Untitled Note",
-      content: "",
-      tags: [],
-      folder: selectedFolder === "all" ? "personal" : selectedFolder,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
-    setNotes([newNote, ...notes]);
-    setSelectedNote(newNote);
-    setIsEditing(true);
-  };
-
-  const handleSaveNote = (updatedNote) => {
-    console.log("Handling save note:", updatedNote);
-    setNotes(notes.map(note => 
-      note.id === updatedNote.id 
-        ? { ...updatedNote, updatedAt: new Date() }
-        : note
-    ));
-    setSelectedNote({ ...updatedNote, updatedAt: new Date() });
-    setIsEditing(false);
+  const handleSaveNote = async (updatedNote) => {
+    try {
+      console.log("Handling save note:", updatedNote);
+      const savedNote = await updateNote(updatedNote);
+      
+      const mappedNote = {
+        ...savedNote,
+        folder: savedNote.folder_id,
+        createdAt: new Date(savedNote.created_at),
+        updatedAt: new Date(savedNote.updated_at)
+      };
+      
+      setNotes(notes.map(note => 
+        note.id === mappedNote.id ? mappedNote : note
+      ));
+      setSelectedNote(mappedNote);
+      setIsEditing(false);
+      
+      toast({
+        title: "Success",
+        description: "Note saved successfully!",
+      });
+    } catch (error) {
+      console.error('Error saving note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save note. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCancelEdit = () => {
@@ -106,47 +212,104 @@ const Index = () => {
     setIsEditing(false);
     // If it's a new note that was never saved (no content and default title), remove it
     if (selectedNote && selectedNote.title === "Untitled Note" && !selectedNote.content) {
-      setNotes(notes.filter(note => note.id !== selectedNote.id));
-      setSelectedNote(null);
+      handleDeleteNote(selectedNote.id);
     }
   };
 
-  const deleteNote = (noteId) => {
-    setNotes(notes.filter(note => note.id !== noteId));
-    if (selectedNote?.id === noteId) {
-      setSelectedNote(null);
-      setIsEditing(false);
+  const handleDeleteNote = async (noteId) => {
+    try {
+      await deleteNoteService(noteId);
+      setNotes(notes.filter(note => note.id !== noteId));
+      if (selectedNote?.id === noteId) {
+        setSelectedNote(null);
+        setIsEditing(false);
+      }
+      toast({
+        title: "Success",
+        description: "Note deleted successfully!",
+      });
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete note. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
-  const addFolder = (name, color) => {
-    const newFolder = {
-      id: Date.now().toString(),
-      name,
-      color,
-    };
-    setFolders([...folders, newFolder]);
-  };
-
-  const deleteFolder = (folderId) => {
-    // Move notes from deleted folder to "personal" folder
-    setNotes(notes.map(note => 
-      note.folder === folderId 
-        ? { ...note, folder: "personal" }
-        : note
-    ));
-    
-    // Remove the folder
-    setFolders(folders.filter(folder => folder.id !== folderId));
-    
-    // Reset selected folder if it's the one being deleted
-    if (selectedFolder === folderId) {
-      setSelectedFolder("all");
+  const addFolder = async (name, color) => {
+    try {
+      const newFolder = await createFolderService(name, color);
+      setFolders([...folders, newFolder]);
+      toast({
+        title: "Success",
+        description: "Folder created successfully!",
+      });
+    } catch (error) {
+      console.error('Error creating folder:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create folder. Please try again.",
+        variant: "destructive",
+      });
     }
   };
+
+  const handleDeleteFolder = async (folderId) => {
+    try {
+      // Move notes from deleted folder to "Personal" folder
+      const personalFolder = folders.find(f => f.name === "Personal");
+      if (personalFolder) {
+        const notesToUpdate = notes.filter(note => note.folder === folderId);
+        for (const note of notesToUpdate) {
+          await updateNote({ ...note, folder: personalFolder.id });
+        }
+        
+        setNotes(notes.map(note => 
+          note.folder === folderId 
+            ? { ...note, folder: personalFolder.id }
+            : note
+        ));
+      }
+      
+      // Delete the folder
+      await deleteFolderService(folderId);
+      setFolders(folders.filter(folder => folder.id !== folderId));
+      
+      // Reset selected folder if it's the one being deleted
+      if (selectedFolder === folderId) {
+        setSelectedFolder("all");
+      }
+      
+      toast({
+        title: "Success",
+        description: "Folder deleted successfully!",
+      });
+    } catch (error) {
+      console.error('Error deleting folder:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete folder. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Show loading screen while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-green-50">
+        <div className="text-center">
+          <BookOpen className="h-16 w-16 mx-auto mb-4 text-emerald-600 animate-pulse" />
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show authentication screen if not authenticated
-  if (!isAuthenticated) {
+  if (!user) {
     return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
   }
 
@@ -163,7 +326,7 @@ const Index = () => {
           onTagsChange={setSelectedTags}
           onSettingsClick={() => setShowSettings(true)}
           onAddFolder={addFolder}
-          onDeleteFolder={deleteFolder}
+          onDeleteFolder={handleDeleteFolder}
         />
         
         <SidebarInset className="flex-1">
@@ -208,7 +371,7 @@ const Index = () => {
                   notes={filteredNotes}
                   selectedNote={selectedNote}
                   onNoteSelect={setSelectedNote}
-                  onNoteDelete={deleteNote}
+                  onNoteDelete={handleDeleteNote}
                   folders={folders}
                 />
               </div>
@@ -250,7 +413,7 @@ const Index = () => {
         {showSettings && (
           <SettingsComponent 
             onClose={() => setShowSettings(false)}
-            currentUser={currentUser}
+            currentUser={user?.email}
             onLogout={handleLogout}
           />
         )}
